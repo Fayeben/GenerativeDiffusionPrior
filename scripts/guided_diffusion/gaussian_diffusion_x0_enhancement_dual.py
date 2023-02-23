@@ -454,13 +454,13 @@ class GaussianDiffusion_final:
             (t != 0).float().view(-1, *([1] * (len(x.shape) - 1)))
         )  # no noise when t == 0
         if cond_fn_left is not None:
-            for i in range(1):
+            for i in range(5):
                 out_left["mean"], light_factor_left, light_variance_left = self.condition_mean(
                     cond_fn_left, out_left, x[:, :, 0:256, 0:256], out_left["pred_xstart"], t, light_factor = light_factor, light_variance = light_variance[0:256, 0:256], model_kwargs=model_kwargs
                 )
 
         if cond_fn_right is not None:
-            for i in range(1):
+            for i in range(5):
                 out_right["mean"], light_factor_right, light_variance_right = self.condition_mean(
                     cond_fn_right, out_right, x_right[:, :, 0:256, 128:384], out_right["pred_xstart"], t, light_factor = light_factor, light_variance = light_variance[0:256, 128:384], model_kwargs=model_kwargs
                 )
