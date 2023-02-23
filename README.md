@@ -18,7 +18,7 @@ pip install -e .
 We use a single  single unconditional DDPM pre-trained on ImageNet to produce diverse and high-fidelity outputs for unified image restoration and enhancement. Download pretrained DDPMs on ImageNet-256(uncond) from [this page](https://github.com/openai/guided-diffusion). 
 Then download pre-generated ImageNet-64 (BigGAN-deep),  LSUN-Bedroom (StyleGAN) and LSUN-Cat (StyleGAN2) images from this page [this page](https://github.com/openai/guided-diffusion/tree/main/evaluations).
 
-# Generative Diffusion Prior (GDP) for linear problems
+## Generative Diffusion Prior (GDP) for linear problems
 
 ```
 cd scripts
@@ -36,10 +36,13 @@ MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_step
 
  * Colorization:
 
-# Generative Diffusion Prior (GDP) for non-linear, blind, multi-guidance problems
+## Generative Diffusion Prior (GDP) for non-linear, blind, multi-guidance problems
 
  * Low light enhancement:
-
+'''
+MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
+python sample_x0_enhancement.py  $MODEL_FLAGS --use_img_for_guidance --start_from_scratch --save_png_files
+'''
  * HDR recovery:
 
 <!-- 
