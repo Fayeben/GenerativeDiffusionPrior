@@ -139,8 +139,8 @@ def main():
                 loss_exp = torch.mean(L_exp(x_in))
                 loss_col = torch.mean(L_color(x_in))
                 Loss_TV = L_TV(light_variance)
-                # loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale * 2000# move xt toward the gradient direction
-                loss = loss - mse * args.img_guidance_scale 
+                loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale # move xt toward the gradient direction
+                # loss = loss - mse * args.img_guidance_scale 
                 # light_factor = light_factor - th.autograd.grad(mse, light_factor,retain_graph=True)[0]
                 # light_variance = light_variance - th.autograd.grad(mse, light_variance,retain_graph=True)[0]
                 # light_variance = light_variance - th.autograd.grad(loss, light_variance,retain_graph=True)[0]
@@ -190,10 +190,10 @@ def main():
                 # light_variance_tmp = light_variance[0:256, 0:256]
                 Loss_TV = L_TV(light_variance)
                 # loss = loss - mse * args.img_guidance_scale - Loss_TV * args.img_guidance_scale/100
-                # loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale * 2000# move xt toward the gradient direction
-                loss = loss - mse * args.img_guidance_scale
-                light_factor = light_factor - th.autograd.grad(mse, light_factor,retain_graph=True)[0]
-                light_variance = light_variance - th.autograd.grad(mse, light_variance,retain_graph=True)[0]
+                loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale # move xt toward the gradient direction
+                # loss = loss - mse * args.img_guidance_scale
+                light_factor = light_factor - th.autograd.grad(loss, light_factor,retain_graph=True)[0]
+                light_variance = light_variance - th.autograd.grad(loss, light_variance,retain_graph=True)[0]
                 # light_variance = light_variance - th.autograd.grad(loss, light_variance,retain_graph=True)[0]
                 print('step t %d img guidance has been used, mse is %.8f * %d = %.2f' % (t[0], mse, args.img_guidance_scale, mse*args.img_guidance_scale))
                 # light_factor -= th.autograd.grad(loss, light_factor)[0]
@@ -243,10 +243,10 @@ def main():
                 # light_variance_tmp = light_variance[0:256, 128:384]
                 Loss_TV = L_TV(light_variance)
                 # loss = loss - mse * args.img_guidance_scale - Loss_TV * args.img_guidance_scale/100
-                # loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale * 2000# move xt toward the gradient direction
-                loss = loss - mse * args.img_guidance_scale
-                light_factor = light_factor - th.autograd.grad(mse, light_factor,retain_graph=True)[0]
-                light_variance = light_variance - th.autograd.grad(mse, light_variance,retain_graph=True)[0]
+                loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale # move xt toward the gradient direction
+                # loss = loss - mse * args.img_guidance_scale
+                light_factor = light_factor - th.autograd.grad(loss, light_factor,retain_graph=True)[0]
+                light_variance = light_variance - th.autograd.grad(loss, light_variance,retain_graph=True)[0]
                 # light_variance = light_variance - th.autograd.grad(loss, light_variance,retain_graph=True)[0]
                 print('step t %d img guidance has been used, mse is %.8f * %d = %.2f' % (t[0], mse, args.img_guidance_scale, mse*args.img_guidance_scale))
                 # light_factor -= th.autograd.grad(loss, light_factor)[0]
