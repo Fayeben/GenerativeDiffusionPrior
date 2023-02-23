@@ -1,8 +1,8 @@
 import numpy as np
 import torch as th
 
-from .gaussian_diffusion_x0_variance_disco import GaussianDiffusion
-from .gaussian_diffusion_x0_variance_disco_final import GaussianDiffusion_final
+from .gaussian_diffusion_x0_enhancement import GaussianDiffusion
+from .gaussian_diffusion_x0_enhancement_dual import GaussianDiffusion_final
 
 def space_timesteps(num_timesteps, section_counts):
     """

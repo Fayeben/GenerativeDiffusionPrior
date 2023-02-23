@@ -1,9 +1,9 @@
 import argparse
 import inspect
 
-from . import gaussian_diffusion_x0_variance_disco as gd
-from . import gaussian_diffusion_x0_variance_disco_final as gd_final
-from .respace_x0_variance_disco import SpacedDiffusion, SpacedDiffusion_1, space_timesteps
+from . import gaussian_diffusion_x0_enhancement as gd
+from . import gaussian_diffusion_x0_enhancement_dual as gd_final
+from .respace_x0_enhancement import SpacedDiffusion, SpacedDiffusion_1, space_timesteps
 from .unet import SuperResModel, UNetModel, EncoderUNetModel
 
 NUM_CLASSES = 1000

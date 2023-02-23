@@ -13,7 +13,7 @@ import torch.nn.functional as F
 
 # from guided_diffusion import dist_util, logger
 from guided_diffusion import logger
-from guided_diffusion.script_util_x0_variance_disco_final import (
+from guided_diffusion.script_util_x0__enhancement import (
     NUM_CLASSES,
     model_and_diffusion_defaults,
     create_model_and_diffusion,
@@ -267,7 +267,7 @@ def main():
         dataset_leftbottom_lr = get_dataset(args.base_leftbottom_samples, args.global_rank, args.world_size)
         dataset_midbottom_lr = get_dataset(args.base_midbottom_samples, args.global_rank, args.world_size)
         dataset_rightbottom_lr = get_dataset(args.base_rightbottom_samples, args.global_rank, args.world_size)
-        dataset_lr = get_dataset(args.base_samples, args.global_rank, args.world_size)
+        dataset_lr = get_dataset(args.base_fight_samples, args.global_rank, args.world_size)
         dataset_left_lr = get_dataset(args.base_left_samples, args.global_rank, args.world_size)
         dataloader_lefttop_lr = th.utils.data.DataLoader(dataset_lefttop_lr, batch_size=args.batch_size, shuffle=False, num_workers=16)
         dataloader_midtop_lr = th.utils.data.DataLoader(dataset_midtop_lr, batch_size=args.batch_size, shuffle=False, num_workers=16)        
@@ -371,7 +371,6 @@ def main():
                 cond_fn_right=cond_fn_right,
                 device=device
             )
-            print(light_variance_return.shape)
             m = torch.nn.Upsample(scale_factor=400/256, mode='bilinear')
             light_variance_return = m(light_variance_return.unsqueeze(0).unsqueeze(0)).squeeze(0).squeeze(0)
             sample_lefttop, light_factor_final1, light_variance_final1 = sample_fn(
@@ -642,7 +641,7 @@ def create_argparser():
     
     parser.add_argument("--use_img_for_guidance", action='store_true', help='whether to use a (low resolution) image for guidance. If true, we generate an image that is similar to the low resolution image')
     parser.add_argument("--img_guidance_scale", default=1000, type=float, help='guidance scale')
-    parser.add_argument("--base_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_rightcrop_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
+    parser.add_argument("--base_fight_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_rightcrop_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
     parser.add_argument("--base_left_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_leftcrop_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
     parser.add_argument("--base_lefttop_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_lefttopcrop_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
     parser.add_argument("--base_midtop_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_midtopcrop_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')

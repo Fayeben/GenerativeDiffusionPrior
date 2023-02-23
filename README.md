@@ -15,15 +15,34 @@ pip install -e .
 
 # Download Checkpoints and Data
 
-Download pretrained DDPMs on ImageNet-64, LSUN-Bedroom-256, LSUN-Cat-256 from [this page](https://github.com/openai/guided-diffusion). 
+We use a single  single unconditional DDPM pre-trained on ImageNet to produce diverse and high-fidelity outputs for unified image restoration and enhancement. Download pretrained DDPMs on ImageNet-256(uncond) from [this page](https://github.com/openai/guided-diffusion). 
 Then download pre-generated ImageNet-64 (BigGAN-deep),  LSUN-Bedroom (StyleGAN) and LSUN-Cat (StyleGAN2) images from this page [this page](https://github.com/openai/guided-diffusion/tree/main/evaluations).
 
-# ES-DDPMs Generate Random Images
+# Generative Diffusion Prior (GDP) for linear problems
 
 ```
 cd scripts
 ```
 
+ * Super-resolution:
+
+'''
+MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
+
+'''
+ * Deblurring:
+
+ * Impainting:
+
+ * Colorization:
+
+# Generative Diffusion Prior (GDP) for non-linear, blind, multi-guidance problems
+
+ * Low light enhancement:
+
+ * HDR recovery:
+
+<!-- 
 Run the following command to use ES-DDPM (T'=100) to generate ImageNet-64 images (with jumping interval 4):
 ```
 python generate_processes_diffusion_and_reverse --execute --reverse_steps 25 --chain_length 250 --dataset imagenet --dataset_path ../evaluations/precomputed/biggan_deep_trunc1_imagenet256.npz --devices '0,1,2,3,4,5,6,7,8' 
@@ -37,4 +56,4 @@ python generate_processes_diffusion_and_reverse --execute --reverse_steps 100 --
 Run the following command to use ES-DDPM (T'=100) to generate LSUN-Cat-256 images:
 ```
 python generate_processes_diffusion_and_reverse --execute --reverse_steps 100 --chain_length 1000 --dataset lsun_cat --dataset_path ../evaluations/precomputed/lsun/stylegan2_lsun_cat.npz --devices '0,1,2,3,4,5,6,7,8' 
-```
+``` -->
