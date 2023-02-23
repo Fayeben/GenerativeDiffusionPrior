@@ -9,6 +9,7 @@ classify_image_graph_def.pb
 visualizations
 # *.png
 *.pt
+!0_label_197.png
 evaluations/precomputed
 generated_image*/*
 scripts/log*
