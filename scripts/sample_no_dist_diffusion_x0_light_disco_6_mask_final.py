@@ -45,17 +45,6 @@ def get_dataset(path, global_rank, world_size):
                         permute=True, normalize=True, rank=global_rank, world_size=world_size)
     return dataset
 
-def gray_dgp(image):
-    n = int(image.shape[0])
-    h = int(image.shape[2])
-    w = int(image.shape[3])
-    r = image[:, 0, :, :]
-    g = image[:, 1, :, :]
-    b = image[:, 2, :, :]
-    gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
-    image_res = gray.view(n, 1, h, w).expand(n, 3, h, w)
-    return image_res
-
 def main():
     args = create_argparser().parse_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.device)
@@ -72,10 +61,7 @@ def main():
     model_right, diffusion_right = create_model_and_diffusion_final(
         **args_to_dict(args, model_and_diffusion_defaults().keys())
     )
-    # model.load_state_dict(
-    #     dist_util.load_state_dict(args.model_path, map_location="cpu")
-    # )
-    # args.model_path = "/home/feiben/DDPM_Beat_GAN/256x256_diffusion.pt"
+
     model.load_state_dict(
         th.load(args.model_path, map_location="cpu")
     )
@@ -116,7 +102,6 @@ def main():
                 #     x_in_tmp = x_in_tmp.detach().cpu().numpy()
                 #     save_images(x_in_tmp, th.Tensor([1]).cuda(), int(t), os.path.join(logger.get_dir(), 'inter'))
                 
-                # blur = transforms.Compose([transforms.ToPILImage(), Addblur(p=1,blur="Gaussian"), transforms.ToTensor()])
                 device_x_in_lr = x_in.device
                 x_in_lr = x_in
                 light_factor.requires_grad_()
@@ -274,7 +259,6 @@ def main():
             dataset = get_dataset(args.dataset_path, args.global_rank, args.world_size)
         dataloader = th.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=16)
 
-    # print(args.use_img_for_guidance)
     # load lr images that are used for guidance 
     if args.use_img_for_guidance:
         dataset_lefttop_lr = get_dataset(args.base_lefttop_samples, args.global_rank, args.world_size)
@@ -360,8 +344,7 @@ def main():
             classes = th.randint(low=0, high=NUM_CLASSES, size=(shape[0],), device=device)
         else:
             classes = label.to(device).long()
-        # print(classes)
-        # light_factor =  th.abs(th.randn([1], device=device))
+
         light_factor_left =  th.randn([1], device=device)/100
         light_variance_left =  th.rand([256,256], device=device)/10000
         light_factor_right =  th.randn([1], device=device)/100

@@ -449,7 +449,6 @@ class GaussianDiffusion_final:
             denoised_fn=denoised_fn,
             model_kwargs=model_kwargs,
         )
-        # print(out_right["mean"].shape, out_right["log_variance"].shape)
         noise = th.randn_like(x)
         nonzero_mask = (
             (t != 0).float().view(-1, *([1] * (len(x.shape) - 1)))
