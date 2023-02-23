@@ -1,7 +1,7 @@
 
 [[Paper]]() [[Models]](#pretrained-models)
 
-This repository contains PyTorch implementation for .
+This repository contains PyTorch implementation for __Generative Diffusion Prior for Unified Image Restoration and Enhancement__.
 
 
 ![intro](figs/teaser.png)
