@@ -10,6 +10,7 @@ visualizations
 # *.png
 *.pt
 !0_label_197.png
+!figs/teaser.png
 evaluations/precomputed
 generated_image*/*
 scripts/log*
