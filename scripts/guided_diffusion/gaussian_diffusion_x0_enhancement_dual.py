@@ -465,8 +465,8 @@ class GaussianDiffusion_final:
                     cond_fn_right, out_right, x_right[:, :, 0:256, 128:384], out_right["pred_xstart"], t, light_factor = light_factor, light_variance = light_variance[0:256, 128:384], model_kwargs=model_kwargs
                 )
         light_factor = (light_factor_left + light_factor_right)/2
-        light_variance[0:256, 0:256] = light_variance_left
-        light_variance[0:256, 128:384] = light_variance_right
+        light_variance[0:256, 0:256] += light_variance_left
+        light_variance[0:256, 128:384] += light_variance_right
         x_grid_mask = th.zeros_like(x, device=x.device)
         light_variance_grid_mask = th.zeros_like(light_variance, device=x.device)
         light_variance_grid_mask[0:256, 0:256] += 1
