@@ -476,12 +476,12 @@ class GaussianDiffusion_final:
         new_out_pred_xstart = th.zeros_like(x, device=x.device)
         x_grid_mask[:, :, 0:256, 0:256] += 1
         x_grid_mask[:, :, 0:256, 128:384] += 1
-        new_out_mean[:, :, 0:256, 0:256] = out_left["mean"]
-        new_out_mean[:, :, 0:256, 128:384] = out_right["mean"]
-        new_out_log_variance[:, :, 0:256, 0:256] = out_left["log_variance"]
-        new_out_log_variance[:, :, 0:256, 128:384] = out_right["log_variance"]
-        new_out_pred_xstart[:, :, 0:256, 0:256] = out_left["pred_xstart"]
-        new_out_pred_xstart[:, :, 0:256, 128:384] = out_right["pred_xstart"]
+        new_out_mean[:, :, 0:256, 0:256] += out_left["mean"]
+        new_out_mean[:, :, 0:256, 128:384] += out_right["mean"]
+        new_out_log_variance[:, :, 0:256, 0:256] += out_left["log_variance"]
+        new_out_log_variance[:, :, 0:256, 128:384] += out_right["log_variance"]
+        new_out_pred_xstart[:, :, 0:256, 0:256] += out_left["pred_xstart"]
+        new_out_pred_xstart[:, :, 0:256, 128:384] += out_right["pred_xstart"]
         new_out_mean = th.div(new_out_mean, x_grid_mask)
         new_out_log_variance = th.div(new_out_log_variance, x_grid_mask)
         new_out_pred_xstart = th.div(new_out_pred_xstart, x_grid_mask)
