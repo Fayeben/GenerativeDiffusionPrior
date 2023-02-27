@@ -13,6 +13,7 @@ visualizations
 !figs/teaser.png
 evaluations/precomputed
 generated_image*/*
+generate_images/*
 scripts/log*
 scripts/imagenet_dataloader/resolution_64/*
 scripts/imagenet_dataloader/resolution_256/*
