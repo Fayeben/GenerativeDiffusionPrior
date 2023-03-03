@@ -83,17 +83,6 @@ def get_dataset(path, global_rank, world_size):
                         permute=True, normalize=True, rank=global_rank, world_size=world_size)
     return dataset
 
-def gray_dgp(image):
-    n = int(image.shape[0])
-    h = int(image.shape[2])
-    w = int(image.shape[3])
-    r = image[:, 0, :, :]
-    g = image[:, 1, :, :]
-    b = image[:, 2, :, :]
-    gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
-    image_res = gray.view(n, 1, h, w).expand(n, 3, h, w)
-    return image_res
-
 def main():
     args = create_argparser().parse_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.device)
@@ -115,14 +104,12 @@ def main():
         model.convert_to_fp16()
     model.eval()
 
-    def color_cond_fn(x, t, y=None, x_lr=None, sample_noisy_x_lr=False, diffusion=None, sample_noisy_x_lr_t_thred=None):
+    def blur_cond_fn(x, t, y=None, x_lr=None, sample_noisy_x_lr=False, diffusion=None, sample_noisy_x_lr_t_thred=None):
         assert y is not None
         with th.enable_grad():
             x_in = x.detach().requires_grad_(True)
             if not x_lr is None:
                 # x_lr and x_in are of shape BChw, BCHW, they are float type that range from -1 to 1, x_in for small t'
-                os.makedirs(os.path.join(logger.get_dir(), 'inter'), exist_ok=True)
-                os.makedirs(os.path.join(logger.get_dir(), 'inter_gray'), exist_ok=True)
 
                 device_x_in_lr = x_in.device
                 blur = get_gaussian_blur(kernel_size=9, device=device_x_in_lr)
