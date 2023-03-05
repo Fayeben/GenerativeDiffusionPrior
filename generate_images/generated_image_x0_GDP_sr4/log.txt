@@ -2,3 +2,16 @@ Logging to /mnt/petrelfs/feiben/GDP/generate_images/generated_image_x0_GDP_sr4
 creating model and diffusion...
 loading dataset...
 sampling...
+created 1 samples
+created 2 samples
+created 3 samples
+created 4 samples
+created 5 samples
+created 6 samples
+created 7 samples
+created 8 samples
+created 9 samples
+created 10 samples
+created 11 samples
+created 12 samples
+created 13 samples

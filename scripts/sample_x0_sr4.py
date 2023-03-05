@@ -41,7 +41,7 @@ def get_dataset(path, global_rank, world_size):
     return dataset
 
 # degradation model
-deg = args.deg
+deg = 'sr4'
 image_size = 256
 channels = 3
 device = 'cuda:0'
@@ -242,7 +242,7 @@ def create_argparser():
         num_samples=100,
         batch_size=1,
         use_ddim=False,
-        model_path="/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/models/256x256_diffusion.pt"
+        model_path="/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/models/256x256_diffusion_uncond.pt"
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()
@@ -264,7 +264,7 @@ def create_argparser():
     parser.add_argument("--dataset_path", default='/mnt/lustre/feiben/DDPM_Beat_GAN/evaluations/precomputed/biggan_deep_imagenet64.npz', type=str, help='path to the generated images. Could be an npz file or an image folder')
     
     parser.add_argument("--use_img_for_guidance", action='store_true', help='whether to use a (low resolution) image for guidance. If true, we generate an image that is similar to the low resolution image')
-    parser.add_argument("--img_guidance_scale", default=10000000, type=float, help='guidance scale')
+    parser.add_argument("--img_guidance_scale", default=4000, type=float, help='guidance scale')
     parser.add_argument("--base_samples", default=base_samples, type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
     parser.add_argument("--sample_noisy_x_lr", action='store_true', help='whether to first sample a noisy x_lr, then use it for guidance. ')
     parser.add_argument("--sample_noisy_x_lr_t_thred", default=1e8, type=int, help='only for t lower than sample_noisy_x_lr_t_thred, we add noise to lr')

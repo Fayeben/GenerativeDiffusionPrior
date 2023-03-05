@@ -13,7 +13,7 @@ import torch.nn.functional as F
 
 # from guided_diffusion import dist_util, logger
 from guided_diffusion import logger
-from guided_diffusion.script_util_x0__enhancement import (
+from guided_diffusion.script_util_x0_enhancement import (
     NUM_CLASSES,
     model_and_diffusion_defaults,
     create_model_and_diffusion,
@@ -175,10 +175,10 @@ def main():
                 # light_variance_tmp = light_variance[0:256, 0:256]
                 Loss_TV = L_TV(light_variance)
                 # loss = loss - mse * args.img_guidance_scale - Loss_TV * args.img_guidance_scale/100
-                loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale # move xt toward the gradient direction
-                # loss = loss - mse * args.img_guidance_scale
-                light_factor = light_factor - th.autograd.grad(loss, light_factor,retain_graph=True)[0]
-                light_variance = light_variance - th.autograd.grad(loss, light_variance,retain_graph=True)[0]
+                # loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale # move xt toward the gradient direction
+                loss = loss - mse * args.img_guidance_scale
+                light_factor = light_factor - th.autograd.grad(mse, light_factor,retain_graph=True)[0]
+                light_variance = light_variance - th.autograd.grad(mse, light_variance,retain_graph=True)[0]
                 # light_variance = light_variance - th.autograd.grad(loss, light_variance,retain_graph=True)[0]
                 print('step t %d img guidance has been used, mse is %.8f * %d = %.2f' % (t[0], mse, args.img_guidance_scale, mse*args.img_guidance_scale))
                 # light_factor -= th.autograd.grad(loss, light_factor)[0]
@@ -228,10 +228,10 @@ def main():
                 # light_variance_tmp = light_variance[0:256, 128:384]
                 Loss_TV = L_TV(light_variance)
                 # loss = loss - mse * args.img_guidance_scale - Loss_TV * args.img_guidance_scale/100
-                loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale # move xt toward the gradient direction
-                # loss = loss - mse * args.img_guidance_scale
-                light_factor = light_factor - th.autograd.grad(loss, light_factor,retain_graph=True)[0]
-                light_variance = light_variance - th.autograd.grad(loss, light_variance,retain_graph=True)[0]
+                # loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale # move xt toward the gradient direction
+                loss = loss - mse * args.img_guidance_scale
+                light_factor = light_factor - th.autograd.grad(mse, light_factor,retain_graph=True)[0]
+                light_variance = light_variance - th.autograd.grad(mse, light_variance,retain_graph=True)[0]
                 # light_variance = light_variance - th.autograd.grad(loss, light_variance,retain_graph=True)[0]
                 print('step t %d img guidance has been used, mse is %.8f * %d = %.2f' % (t[0], mse, args.img_guidance_scale, mse*args.img_guidance_scale))
                 # light_factor -= th.autograd.grad(loss, light_factor)[0]
@@ -631,7 +631,7 @@ def create_argparser():
     parser.add_argument("--device", default=0, type=int, help='the cuda device to use to generate images')
     parser.add_argument("--global_rank", default=0, type=int, help='global rank of this process')
     parser.add_argument("--world_size", default=1, type=int, help='the total number of ranks')
-    parser.add_argument("--save_dir", default='/mnt/lustre/feiben/DDPM_Beat_GAN/generated_image_x0_enhancement_brightness_lol_disco_mask', type=str, help='the directory to save the generate images')
+    parser.add_argument("--save_dir", default='/mnt/petrelfs/feiben/GDP/generate_images/generated_image_x0_enhancement_brightness_lol_disco_mask', type=str, help='the directory to save the generate images')
     parser.add_argument("--save_png_files", action='store_true', help='whether to save the generate images into individual png files')
     parser.add_argument("--save_numpy_array", action='store_true', help='whether to save the generate images into a single numpy array')
     
@@ -640,7 +640,7 @@ def create_argparser():
     parser.add_argument("--dataset_path", default='/mnt/lustre/feiben/DDPM_Beat_GAN/evaluations/precomputed/biggan_deep_imagenet64.npz', type=str, help='path to the generated images. Could be an npz file or an image folder')
     
     parser.add_argument("--use_img_for_guidance", action='store_true', help='whether to use a (low resolution) image for guidance. If true, we generate an image that is similar to the low resolution image')
-    parser.add_argument("--img_guidance_scale", default=1000, type=float, help='guidance scale')
+    parser.add_argument("--img_guidance_scale", default=100, type=float, help='guidance scale')
     parser.add_argument("--base_fight_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_rightcrop_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
     parser.add_argument("--base_left_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_leftcrop_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
     parser.add_argument("--base_lefttop_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_lefttopcrop_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')

@@ -454,16 +454,17 @@ class GaussianDiffusion_final:
             (t != 0).float().view(-1, *([1] * (len(x.shape) - 1)))
         )  # no noise when t == 0
         if cond_fn_left is not None:
-            for i in range(5):
+            for i in range(2):
                 out_left["mean"], light_factor_left, light_variance_left = self.condition_mean(
                     cond_fn_left, out_left, x[:, :, 0:256, 0:256], out_left["pred_xstart"], t, light_factor = light_factor, light_variance = light_variance[0:256, 0:256], model_kwargs=model_kwargs
                 )
 
         if cond_fn_right is not None:
-            for i in range(5):
+            for i in range(2):
                 out_right["mean"], light_factor_right, light_variance_right = self.condition_mean(
                     cond_fn_right, out_right, x_right[:, :, 0:256, 128:384], out_right["pred_xstart"], t, light_factor = light_factor, light_variance = light_variance[0:256, 128:384], model_kwargs=model_kwargs
                 )
+        light_variance = th.zeros_like(light_variance, device=x.device)
         light_factor = (light_factor_left + light_factor_right)/2
         light_variance[0:256, 0:256] += light_variance_left
         light_variance[0:256, 128:384] += light_variance_right
@@ -487,7 +488,6 @@ class GaussianDiffusion_final:
         new_out_pred_xstart = th.div(new_out_pred_xstart, x_grid_mask)
         light_variance = th.div(light_variance, light_variance_grid_mask)
         sample = new_out_mean + nonzero_mask * th.exp(0.5 * new_out_log_variance) * noise
-        print(light_factor, light_variance)
         return {"sample": sample, "pred_xstart": new_out_pred_xstart, "light_factor": light_factor, 'light_variance':light_variance}, light_factor, light_variance
 
     def p_sample_loop(
