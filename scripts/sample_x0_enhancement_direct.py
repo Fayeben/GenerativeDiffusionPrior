@@ -17,7 +17,7 @@ from guided_diffusion.script_util_x0_enhancement import (
     NUM_CLASSES,
     model_and_diffusion_defaults,
     create_model_and_diffusion,
-    create_model_and_diffusion_final,
+    create_model_and_diffusion_direct,
     add_dict_to_argparser,
     args_to_dict,
 )
@@ -72,7 +72,7 @@ def main():
     L_color = MyLoss.L_color()
     L_TV = MyLoss.L_TV()
 
-    def light_cond_fn(x, t, light_factor = None, light_mask = None,  y=None, x_lr=None, sample_noisy_x_lr=False, diffusion=None, sample_noisy_x_lr_t_thred=None):
+    def light_cond_fn(x, t, light_factor = None, light_mask = None, corner=None, y=None, x_lr=None, sample_noisy_x_lr=False, diffusion=None, sample_noisy_x_lr_t_thred=None):
         assert y is not None
         assert light_factor is not None
         with th.enable_grad():
@@ -80,6 +80,7 @@ def main():
             loss = 0
             if not x_lr is None:
                 # x_lr and x_in are of shape BChw, BCHW, they are float type that range from -1 to 1, x_in for small t'
+                x_lr = x_lr[:, :, corner[0]:corner[0]+corner[3], corner[1]:corner[1]+corner[3]]
                 device_x_in_lr = x_in.device
                 x_in_lr = x_in
                 light_factor.requires_grad_()
@@ -109,85 +110,6 @@ def main():
                 print('step t %d img guidance has been used, mse is %.8f * %d = %.2f' % (t[0], mse, args.img_guidance_scale, mse*args.img_guidance_scale))
             return light_factor, light_mask, th.autograd.grad(loss, x_in)[0]
 
-    def light_cond_fn_left(x, t, light_factor = None, light_mask = None,  y=None, x_lr=None, sample_noisy_x_lr=False, diffusion=None, sample_noisy_x_lr_t_thred=None):
-        assert y is not None
-        assert light_factor is not None
-        with th.enable_grad():
-            x_in = x.detach().requires_grad_(True)
-            loss = 0
-            if not x_lr is None:
-                # x_lr and x_in are of shape BChw, BCHW, they are float type that range from -1 to 1, x_in for small t'
-                device_x_in_lr = x_in.device
-
-                x_in_lr = x_in
-                light_factor.requires_grad_()
-                light_mask.requires_grad_()
-                x_in_lr = (x_in_lr+1)/2 * light_factor + light_mask
-
-                if sample_noisy_x_lr:
-                    t_numpy = t.detach().cpu().numpy()
-                    spaced_t_steps = [diffusion.timestep_reverse_map[t_step] for t_step in t_numpy]
-                    if sample_noisy_x_lr_t_thred is None or spaced_t_steps[0] < sample_noisy_x_lr_t_thred:
-                        print('Sampling noisy lr')
-                        spaced_t_steps = th.Tensor(spaced_t_steps).to(t.device).to(t.dtype)
-                        x_lr = diffusion.q_sample(x_lr, spaced_t_steps)
-	            
-                x_lr = (x_lr + 1) / 2
-                mse = (x_in_lr - x_lr) ** 2
-                mse = mse.mean(dim=(1,2,3))
-                mse = mse.sum()
-                loss_exp = torch.mean(L_exp(x_in))
-                loss_col = torch.mean(L_color(x_in))
-                Loss_TV = L_TV(light_mask)
-                # loss = loss - mse * args.img_guidance_scale - Loss_TV * args.img_guidance_scale/100
-                # loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale # move xt toward the gradient direction
-                loss = loss - mse * args.img_guidance_scale
-                light_factor = light_factor - th.autograd.grad(mse, light_factor,retain_graph=True)[0]
-                light_mask = light_mask - th.autograd.grad(mse, light_mask,retain_graph=True)[0]
-                # light_variance = light_variance - th.autograd.grad(loss, light_variance,retain_graph=True)[0]
-                print('step t %d img guidance has been used, mse is %.8f * %d = %.2f' % (t[0], mse, args.img_guidance_scale, mse*args.img_guidance_scale))
-            return light_factor, light_mask, th.autograd.grad(loss, x_in)[0]
-
-
-    def light_cond_fn_right(x, t, light_factor = None, light_mask = None,  y=None, x_lr=None, sample_noisy_x_lr=False, diffusion=None, sample_noisy_x_lr_t_thred=None):
-        assert y is not None
-        assert light_factor is not None
-        with th.enable_grad():
-            x_in = x.detach().requires_grad_(True)
-            loss = 0
-            if not x_lr is None:
-                # x_lr and x_in are of shape BChw, BCHW, they are float type that range from -1 to 1, x_in for small t'
-                device_x_in_lr = x_in.device
-
-                x_in_lr = x_in
-                light_factor.requires_grad_()
-                light_mask.requires_grad_()
-                x_in_lr = (x_in_lr+1)/2 * light_factor + light_mask
-
-                if sample_noisy_x_lr:
-                    t_numpy = t.detach().cpu().numpy()
-                    spaced_t_steps = [diffusion.timestep_reverse_map[t_step] for t_step in t_numpy]
-                    if sample_noisy_x_lr_t_thred is None or spaced_t_steps[0] < sample_noisy_x_lr_t_thred:
-                        print('Sampling noisy lr')
-                        spaced_t_steps = th.Tensor(spaced_t_steps).to(t.device).to(t.dtype)
-                        x_lr = diffusion.q_sample(x_lr, spaced_t_steps)
-	            
-                x_lr = (x_lr + 1) / 2
-                mse = (x_in_lr - x_lr) ** 2
-                mse = mse.mean(dim=(1,2,3))
-                mse = mse.sum()
-                loss_exp = torch.mean(L_exp(x_in))
-                loss_col = torch.mean(L_color(x_in))
-                # light_variance_tmp = light_variance[0:256, 128:384]
-                Loss_TV = L_TV(light_mask)
-                # loss = loss - mse * args.img_guidance_scale - Loss_TV * args.img_guidance_scale/100
-                # loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale # move xt toward the gradient direction
-                loss = loss - mse * args.img_guidance_scale
-                light_factor = light_factor - th.autograd.grad(mse, light_factor,retain_graph=True)[0]
-                light_mask = light_mask - th.autograd.grad(mse, light_mask,retain_graph=True)[0]
-                # light_variance = light_variance - th.autograd.grad(loss, light_variance,retain_graph=True)[0]
-                print('step t %d img guidance has been used, mse is %.8f * %d = %.2f' % (t[0], mse, args.img_guidance_scale, mse*args.img_guidance_scale))
-            return light_factor, light_variance, th.autograd.grad(loss, x_in)[0]
 
     def model_fn(x, t, y=None):
         assert y is not None
@@ -231,7 +153,7 @@ def main():
         if args.use_img_for_guidance:
             image, label = data[0]
             image_lr, label = data[1]
-            cond_fn = lambda x,t,light_factor,light_mask,y : light_cond_fn_right(x, t, light_factor=light_factor, light_variance=light_mask, y=y, x_lr=image_lr, sample_noisy_x_lr=args.sample_noisy_x_lr, diffusion=diffusion, sample_noisy_x_lr_t_thred=args.sample_noisy_x_lr_t_thred)
+            cond_fn = lambda x,t,light_factor,light_mask,corner,y : light_cond_fn_right(x, t, light_factor=light_factor, light_variance=light_mask, corner=corner, y=y, x_lr=image_lr, sample_noisy_x_lr=args.sample_noisy_x_lr, diffusion=diffusion, sample_noisy_x_lr_t_thred=args.sample_noisy_x_lr_t_thred)
         else:
             image, label = data
             cond_fn = lambda x,t,y : general_cond_fn(x, t, y=y, x_lr=None)
@@ -245,7 +167,7 @@ def main():
             classes = label.to(device).long()
 
         light_factor =  th.randn([1], device=device)/100
-        light_mask =  th.rand([256,384], device=device)/10000
+        light_mask =  th.rand([600,400], device=device)/10000
         image = image.to(device)
         model_kwargs = {}
         model_kwargs["y"] = classes

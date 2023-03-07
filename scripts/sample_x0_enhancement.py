@@ -124,8 +124,8 @@ def main():
                 loss_exp = torch.mean(L_exp(x_in))
                 loss_col = torch.mean(L_color(x_in))
                 Loss_TV = L_TV(light_variance)
-                loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale # move xt toward the gradient direction
-                # loss = loss - mse * args.img_guidance_scale 
+                # loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale # move xt toward the gradient direction
+                loss = loss - mse * args.img_guidance_scale 
                 # light_factor = light_factor - th.autograd.grad(mse, light_factor,retain_graph=True)[0]
                 # light_variance = light_variance - th.autograd.grad(mse, light_variance,retain_graph=True)[0]
                 # light_variance = light_variance - th.autograd.grad(loss, light_variance,retain_graph=True)[0]
@@ -640,7 +640,7 @@ def create_argparser():
     parser.add_argument("--dataset_path", default='/mnt/lustre/feiben/DDPM_Beat_GAN/evaluations/precomputed/biggan_deep_imagenet64.npz', type=str, help='path to the generated images. Could be an npz file or an image folder')
     
     parser.add_argument("--use_img_for_guidance", action='store_true', help='whether to use a (low resolution) image for guidance. If true, we generate an image that is similar to the low resolution image')
-    parser.add_argument("--img_guidance_scale", default=10000, type=float, help='guidance scale')
+    parser.add_argument("--img_guidance_scale", default=30000, type=float, help='guidance scale')
     parser.add_argument("--base_fight_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_rightcrop_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
     parser.add_argument("--base_left_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_leftcrop_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
     parser.add_argument("--base_lefttop_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_lefttopcrop_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
