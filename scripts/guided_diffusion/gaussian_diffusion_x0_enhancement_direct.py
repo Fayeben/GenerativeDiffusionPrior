@@ -15,6 +15,8 @@ from .nn import mean_flat
 from .losses import normal_kl, discretized_gaussian_log_likelihood
 import copy
 
+from torchvision.transforms.functional import crop
+
 def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
     """
     Get a pre-defined beta schedule for the given name.
@@ -354,7 +356,7 @@ class GaussianDiffusion_direct:
             return t.float() * (1000.0 / self.num_timesteps)
         return t
 
-    def condition_mean(self, cond_fn, p_mean_var, x, pred_xstart, t, light_factor=None, light_variance=None, corner=None, model_kwargs=None):
+    def condition_mean(self, cond_fn, p_mean_var, x, pred_xstart, t, light_factor=None, light_mask=None, corner=None, model_kwargs=None):
         """
         Compute the mean for the previous step, given a function cond_fn that
         computes the gradient of a conditional log probability with respect to
@@ -366,13 +368,13 @@ class GaussianDiffusion_direct:
         p_mean_var["mean"].requires_grad_(True)
         optimizer = th.optim.Adam([p_mean_var["mean"]], lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)
         for i in range(1):
-            light_factor, light_variance, gradient = cond_fn(pred_xstart, self._scale_timesteps(t), light_factor=light_factor, light_variance=light_variance, corner=[hi, wi, p_size], **model_kwargs)
+            light_factor, light_mask, gradient = cond_fn(pred_xstart, self._scale_timesteps(t), light_factor=light_factor, light_mask=light_mask, corner=corner, **model_kwargs)
             new_mean = (p_mean_var["mean"].float() +  gradient.float())
             new_mean.requires_grad_(True)
             optimizer.zero_grad()
             new_mean.backward(th.ones_like(new_mean))
             optimizer.step()
-        return new_mean, light_factor, light_variance
+        return new_mean, light_factor, light_mask
 
     def condition_score(self, cond_fn, p_mean_var, x, t, model_kwargs=None):
         """
@@ -414,8 +416,7 @@ class GaussianDiffusion_direct:
         light_mask,
         clip_denoised=True,
         denoised_fn=None,
-        cond_fn_left=None,
-        cond_fn_right=None,
+        cond_fn=None,
         model_kwargs=None,
     ):
         """
@@ -450,8 +451,8 @@ class GaussianDiffusion_direct:
         light_factor_return = 0
         light_factor_count = 0
         for (hi, wi) in corners:
-            xt_patch = crop(xt, hi, wi, p_size, p_size)
-
+            # xt_patch = crop(xt, hi, wi, p_size, p_size)
+            
             out = self.p_mean_variance(
                 model,
                 x[:, :, hi:hi + p_size, wi:wi + p_size],
@@ -460,7 +461,7 @@ class GaussianDiffusion_direct:
                 denoised_fn=denoised_fn,
                 model_kwargs=model_kwargs,
             )
-
+            print(hi, wi)
             if cond_fn is not None:
                 for i in range(2):
                     out["mean"], light_factor_tmp, light_mask_tmp = self.condition_mean(
@@ -472,7 +473,7 @@ class GaussianDiffusion_direct:
             x_grid_mask[:, :, hi:hi + p_size, wi:wi + p_size] += 1
             new_out_mean[:, :, hi:hi + p_size, wi:wi + p_size] += out["mean"]          
             new_out_log_variance[:, :, hi:hi + p_size, wi:wi + p_size] += out["log_variance"]
-            new_out_pred_xstart[:, :, hi:hi + p_size, wi:wi + p_size] += out_right["pred_xstart"]
+            new_out_pred_xstart[:, :, hi:hi + p_size, wi:wi + p_size] += out["pred_xstart"]
             light_factor_count += 1
 
         light_factor = light_factor_return/light_factor_count
@@ -528,7 +529,7 @@ class GaussianDiffusion_direct:
             model,
             shape,
             light_factor,
-            light_variance,
+            light_mask,
             noise=noise,
             clip_denoised=clip_denoised,
             denoised_fn=denoised_fn,

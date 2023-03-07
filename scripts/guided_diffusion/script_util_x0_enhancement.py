@@ -4,7 +4,7 @@ import inspect
 from . import gaussian_diffusion_x0_enhancement as gd
 from . import gaussian_diffusion_x0_enhancement_dual as gd_final
 from . import gaussian_diffusion_x0_enhancement_direct as gd_direct
-from .respace_x0_enhancement import SpacedDiffusion, SpacedDiffusion_1, space_timesteps
+from .respace_x0_enhancement import SpacedDiffusion, SpacedDiffusion_1, SpacedDiffusion_direct, space_timesteps
 from .unet import SuperResModel, UNetModel, EncoderUNetModel
 
 NUM_CLASSES = 1000
@@ -616,7 +616,7 @@ def create_gaussian_diffusion_direct(
     # use_timesteps is a set of integers that range from 0 to steps-1
     # it contains timestep_respacing integers that uniformly covers the interval
     # learn_sigma is true in our case, rescale_timesteps is false in our time
-    return SpacedDiffusion_1(
+    return SpacedDiffusion_direct(
         use_timesteps=space_timesteps(steps, timestep_respacing),
         betas=betas,
         model_mean_type=(

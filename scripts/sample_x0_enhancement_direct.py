@@ -55,7 +55,7 @@ def main():
     logger.configure(dir = save_dir)
 
     logger.log("creating model and diffusion...")
-    model, diffusion = create_model_and_diffusion(
+    model, diffusion = create_model_and_diffusion_direct(
         **args_to_dict(args, model_and_diffusion_defaults().keys())
     )
 
@@ -80,7 +80,7 @@ def main():
             loss = 0
             if not x_lr is None:
                 # x_lr and x_in are of shape BChw, BCHW, they are float type that range from -1 to 1, x_in for small t'
-                x_lr = x_lr[:, :, corner[0]:corner[0]+corner[3], corner[1]:corner[1]+corner[3]]
+                x_lr = x_lr[:, :, corner[0]:corner[0]+corner[2], corner[1]:corner[1]+corner[2]]
                 device_x_in_lr = x_in.device
                 x_in_lr = x_in
                 light_factor.requires_grad_()
@@ -95,7 +95,7 @@ def main():
                         spaced_t_steps = th.Tensor(spaced_t_steps).to(t.device).to(t.dtype)
                         x_lr = diffusion.q_sample(x_lr, spaced_t_steps)
 
-	            
+                x_lr = x_lr.to(device_x_in_lr)
                 x_lr = (x_lr + 1) / 2
                 mse = (x_in_lr - x_lr) ** 2
                 mse = mse.mean(dim=(1,2,3))
@@ -133,7 +133,7 @@ def main():
         dataloader_lr = th.utils.data.DataLoader(dataset_lr, batch_size=args.batch_size, shuffle=False, num_workers=16)  
 
         if args.start_from_scratch:
-            dataset = DummyDataset(len(dataset_lefttop_lr), rank=0, world_size=1)
+            dataset = DummyDataset(len(dataset_lr), rank=0, world_size=1)
             dataloader = th.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=16)
         dataloader = zip(dataloader, dataloader_lr)
 
@@ -153,7 +153,7 @@ def main():
         if args.use_img_for_guidance:
             image, label = data[0]
             image_lr, label = data[1]
-            cond_fn = lambda x,t,light_factor,light_mask,corner,y : light_cond_fn_right(x, t, light_factor=light_factor, light_variance=light_mask, corner=corner, y=y, x_lr=image_lr, sample_noisy_x_lr=args.sample_noisy_x_lr, diffusion=diffusion, sample_noisy_x_lr_t_thred=args.sample_noisy_x_lr_t_thred)
+            cond_fn = lambda x,t,light_factor,light_mask,corner,y : light_cond_fn(x, t, light_factor=light_factor, light_mask=light_mask, corner=corner, y=y, x_lr=image_lr, sample_noisy_x_lr=args.sample_noisy_x_lr, diffusion=diffusion, sample_noisy_x_lr_t_thred=args.sample_noisy_x_lr_t_thred)
         else:
             image, label = data
             cond_fn = lambda x,t,y : general_cond_fn(x, t, y=y, x_lr=None)
@@ -176,15 +176,14 @@ def main():
         )
 
         if args.start_from_scratch:
-            sample, light_factor, light_mask = sample_fn_right(
-                model_fn_right,
+            sample, light_factor, light_mask = sample_fn(
+                model_fn,
                 shape,
                 light_factor, 
                 light_mask,
                 clip_denoised=args.clip_denoised,
                 model_kwargs=model_kwargs,
-                cond_fn_left=cond_fn,
-                cond_fn_right=cond_fn,
+                cond_fn=cond_fn,
                 device=device
             )
         else:
@@ -198,9 +197,22 @@ def main():
                 noise=image,
                 denoise_steps=args.denoise_steps
             )
-        save_images(sample, classes, start_idx + len(all_images) * args.batch_size, os.path.join(logger.get_dir(), 'images'))
 
-        save_images(light_mask, classes, start_idx + len(all_images) * args.batch_size, os.path.join(logger.get_dir(), 'mask'))
+        sample = ((sample + 1) * 127.5).clamp(0, 255).to(th.uint8)
+        sample = sample.permute(0, 2, 3, 1)
+        sample = sample.contiguous()
+
+        image_lr = ((image_lr + 1) * 127.5).clamp(0, 255).to(th.uint8)
+        image_lr = image_lr.permute(0, 2, 3, 1)
+        image_lr = image_lr.contiguous()
+
+        sample = sample.detach().cpu().numpy()
+        classes = classes.detach().cpu().numpy()
+        image_lr = image_lr.detach().cpu().numpy()
+        if args.save_png_files:
+            save_images(sample, classes, start_idx + len(all_images) * args.batch_size, os.path.join(logger.get_dir(), 'images'))
+
+            save_images(light_mask, classes, start_idx + len(all_images) * args.batch_size, os.path.join(logger.get_dir(), 'mask'))
 
         all_images.append(sample)
         all_labels.append(classes)
@@ -236,7 +248,7 @@ def create_argparser():
     
     parser.add_argument("--use_img_for_guidance", action='store_true', help='whether to use a (low resolution) image for guidance. If true, we generate an image that is similar to the low resolution image')
     parser.add_argument("--img_guidance_scale", default=1000, type=float, help='guidance scale')
-    parser.add_argument("--base_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_rightcrop_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
+    parser.add_argument("--base_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_low_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
 
     parser.add_argument("--sample_noisy_x_lr", action='store_true', help='whether to first sample a noisy x_lr, then use it for guidance. ')
     parser.add_argument("--sample_noisy_x_lr_t_thred", default=1e8, type=int, help='only for t lower than sample_noisy_x_lr_t_thred, we add noise to lr')
