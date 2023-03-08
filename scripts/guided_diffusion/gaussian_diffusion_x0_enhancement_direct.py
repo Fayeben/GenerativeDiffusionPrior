@@ -400,11 +400,13 @@ class GaussianDiffusion_direct:
         )
         return out
 
-    def overlapping_grid_indices(self, x_cond, output_size=256, r=16):
+    def overlapping_grid_indices(self, x_cond, output_size=256, r=64):
         _, c, h, w = x_cond.shape
         r = 16 if r is None else r
         h_list = [i for i in range(0, h - output_size + 1, r)]
+        h_list.append(h - output_size)
         w_list = [i for i in range(0, w - output_size + 1, r)]
+        w_list.append(w - output_size)
         return h_list, w_list
 
     def p_sample(

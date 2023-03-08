@@ -103,8 +103,8 @@ def main():
                 loss_exp = torch.mean(L_exp(x_in))
                 loss_col = torch.mean(L_color(x_in))
                 Loss_TV = L_TV(light_mask)
-                loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale # move xt toward the gradient direction
-                # loss = loss - mse * args.img_guidance_scale 
+                # loss = loss - mse * args.img_guidance_scale - loss_exp * args.img_guidance_scale / 100 - loss_col * args.img_guidance_scale /200  - Loss_TV * args.img_guidance_scale # move xt toward the gradient direction
+                loss = loss - mse * args.img_guidance_scale 
                 light_factor = light_factor - th.autograd.grad(mse, light_factor,retain_graph=True)[0]
                 light_mask = light_mask - th.autograd.grad(mse, light_mask,retain_graph=True)[0]
                 print('step t %d img guidance has been used, mse is %.8f * %d = %.2f' % (t[0], mse, args.img_guidance_scale, mse*args.img_guidance_scale))
@@ -158,7 +158,7 @@ def main():
             image, label = data
             cond_fn = lambda x,t,y : general_cond_fn(x, t, y=y, x_lr=None)
         if args.start_from_scratch:
-            shape = (image.shape[0], 3, args.image_size, 384)
+            shape = (image.shape[0], 3, 400, 600)
         else:
             shape = list(image.shape)
         if args.start_from_scratch and not args.use_img_for_guidance:
@@ -167,7 +167,7 @@ def main():
             classes = label.to(device).long()
 
         light_factor =  th.randn([1], device=device)/100
-        light_mask =  th.rand([600,400], device=device)/10000
+        light_mask =  th.rand([400,600], device=device)/10000
         image = image.to(device)
         model_kwargs = {}
         model_kwargs["y"] = classes
@@ -206,6 +206,12 @@ def main():
         image_lr = image_lr.permute(0, 2, 3, 1)
         image_lr = image_lr.contiguous()
 
+        light_mask = ((light_mask + 1) * 127.5).clamp(0, 255).to(th.uint8)
+        light_mask = light_mask.unsqueeze(0).unsqueeze(0).permute(0, 2, 3, 1)
+        light_mask = light_mask.contiguous()
+        print(sample.shape, light_mask.shape)
+
+        light_mask = light_mask.detach().cpu().numpy()
         sample = sample.detach().cpu().numpy()
         classes = classes.detach().cpu().numpy()
         image_lr = image_lr.detach().cpu().numpy()
@@ -214,6 +220,7 @@ def main():
 
             save_images(light_mask, classes, start_idx + len(all_images) * args.batch_size, os.path.join(logger.get_dir(), 'mask'))
 
+            save_images(image_lr, classes, start_idx + len(all_images) * args.batch_size, os.path.join(logger.get_dir(), 'lr'))
         all_images.append(sample)
         all_labels.append(classes)
         logger.log(f"created {len(all_images) * args.batch_size} samples")
@@ -247,7 +254,7 @@ def create_argparser():
     parser.add_argument("--dataset_path", default='/mnt/lustre/feiben/DDPM_Beat_GAN/evaluations/precomputed/biggan_deep_imagenet64.npz', type=str, help='path to the generated images. Could be an npz file or an image folder')
     
     parser.add_argument("--use_img_for_guidance", action='store_true', help='whether to use a (low resolution) image for guidance. If true, we generate an image that is similar to the low resolution image')
-    parser.add_argument("--img_guidance_scale", default=1000, type=float, help='guidance scale')
+    parser.add_argument("--img_guidance_scale", default=10000, type=float, help='guidance scale')
     parser.add_argument("--base_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_low_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
 
     parser.add_argument("--sample_noisy_x_lr", action='store_true', help='whether to first sample a noisy x_lr, then use it for guidance. ')
