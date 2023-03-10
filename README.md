@@ -41,6 +41,14 @@ python sample_x0_linear.py  $MODEL_FLAGS --deg inp25 --use_img_for_guidance --st
 MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
 python sample_x0_color.py  $MODEL_FLAGS --use_img_for_guidance --start_from_scratch --save_png_files
 ```
+
+
+ * Super-resolution with 20-step DDIM:
+```
+MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
+SAMPLE_FLAGS="--batch_size 1 --num_samples 100  --timestep_respacing ddim20 --use_ddim True"
+python sample_x0_linear.py  $MODEL_FLAGS --deg sr4 --use_img_for_guidance --start_from_scratch --save_png_files
+```
 ## Generative Diffusion Prior (GDP) for non-linear, blind, multi-guidance problems
 
  * Low light enhancement:

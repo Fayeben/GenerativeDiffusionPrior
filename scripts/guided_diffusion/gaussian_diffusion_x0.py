@@ -366,7 +366,7 @@ class GaussianDiffusion:
         gradient = cond_fn(pred_xstart, self._scale_timesteps(t), **model_kwargs)
         optimizer = th.optim.Adam([p_mean_var["mean"]], lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)
         new_mean = p_mean_var["mean"].float()
-        for i in range(1):
+        for i in range(200):
             gradient = cond_fn(pred_xstart, self._scale_timesteps(t), **model_kwargs)
             new_mean = (p_mean_var["mean"].float() +  gradient.float())
             new_mean.requires_grad_(True)
