@@ -31,7 +31,7 @@ import cv2
 import pdb
 
 import pytorch_ssim
-
+import time 
 def get_dataset(path, global_rank, world_size):
     if os.path.isfile(path): # base_samples could be store in a .npz file
         dataset = NpzDataset(path, rank=global_rank, world_size=world_size)
@@ -57,7 +57,7 @@ if deg[:3] == 'inp':
         mask = torch.from_numpy(loaded).to(device).reshape(-1)
         missing_r = torch.nonzero(mask == 0).long().reshape(-1) * 3
     else:
-        loaded = np.loadtxt("/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/inp_masks/mask.np")
+        loaded = np.loadtxt("/nvme/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/inp_masks/mask.np")
         mask = torch.from_numpy(loaded).to(device)
         missing_r = mask[:image_size**2 // 4].to(device).long() * 3  
     missing_g = missing_r + 1
@@ -117,9 +117,6 @@ def main():
                 mse = (x_in_lr - x_lr) ** 2
                 mse = mse.mean(dim=(1,2,3))
                 mse = mse.sum()
-                ssim_value = pytorch_ssim.ssim(x_in_lr, x_lr).item()
-                ssim_loss = pytorch_ssim.SSIM()
-                ssim_out = -ssim_loss(x_in_lr, x_lr)
 
                 loss = - mse * args.img_guidance_scale # move xt toward the gradient direction 
                 print('step t %d img guidance has been used, mse is %.8f * %d = %.2f' % (t[0], mse, args.img_guidance_scale, mse*args.img_guidance_scale))
@@ -162,6 +159,7 @@ def main():
     all_images = []
     all_labels = []
     # while len(all_images) * args.batch_size < args.num_samples:
+    total_time = 0
     for i, data in enumerate(dataloader):
         if args.use_img_for_guidance:
             image, label = data[0]
@@ -185,6 +183,7 @@ def main():
         sample_fn = (
             diffusion.p_sample_loop if not args.use_ddim else diffusion.ddim_sample_loop
         )
+        c_time=time.time()
         if args.start_from_scratch:
             sample = sample_fn(
                 model_fn,
@@ -205,6 +204,9 @@ def main():
                 noise=image,
                 denoise_steps=args.denoise_steps
             )
+        s_time=time.time()
+        print("total time", s_time-c_time)
+        total_time += s_time-c_time
         sample = ((sample + 1) * 127.5).clamp(0, 255).to(th.uint8)
         sample = sample.permute(0, 2, 3, 1)
         sample = sample.contiguous()
@@ -222,6 +224,8 @@ def main():
         all_images.append(sample)
         all_labels.append(classes)
         logger.log(f"created {len(all_images) * args.batch_size} samples")
+
+    print("average time", total_time/1000)
 
     if args.save_numpy_array:
         arr = np.concatenate(all_images, axis=0)
@@ -242,15 +246,15 @@ def create_argparser():
         num_samples=100,
         batch_size=1,
         use_ddim=False,
-        model_path="/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/models/256x256_diffusion_uncond.pt"
+        model_path="/nvme/feiben/DDPM_Beat_GAN/scripts/models/256x256_diffusion_uncond.pt"
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()
     add_dict_to_argparser(parser, defaults)
 
 
-    save_dir  = os.path.join('/mnt/petrelfs/feiben/GDP/generate_images', ('generated_image_x0_GDP_' + deg))
-    base_samples  = os.path.join('/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader', (deg + ('_resolution_256.npz')))
+    save_dir  = os.path.join('/nvme/feiben/GDP/generate_images', ('generated_image_x0_GDP_' + deg))
+    base_samples  = os.path.join('/nvme/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader', (deg + ('_resolution_256.npz')))
     # add zhaoyang own's arguments
     parser.add_argument("--device", default=0, type=int, help='the cuda device to use to generate images')
     parser.add_argument("--global_rank", default=0, type=int, help='global rank of this process')
@@ -261,10 +265,10 @@ def create_argparser():
     
     # these two arguments are only valid when not start from scratch
     parser.add_argument("--denoise_steps", default=25, type=int, help='number of denoise steps')
-    parser.add_argument("--dataset_path", default='/mnt/lustre/feiben/DDPM_Beat_GAN/evaluations/precomputed/biggan_deep_imagenet64.npz', type=str, help='path to the generated images. Could be an npz file or an image folder')
+    parser.add_argument("--dataset_path", default='/nvme/feiben/DDPM_Beat_GAN/evaluations/precomputed/biggan_deep_imagenet64.npz', type=str, help='path to the generated images. Could be an npz file or an image folder')
     
     parser.add_argument("--use_img_for_guidance", action='store_true', help='whether to use a (low resolution) image for guidance. If true, we generate an image that is similar to the low resolution image')
-    parser.add_argument("--img_guidance_scale", default=4000, type=float, help='guidance scale')
+    parser.add_argument("--img_guidance_scale", default=2000, type=float, help='guidance scale')
     parser.add_argument("--base_samples", default=base_samples, type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
     parser.add_argument("--sample_noisy_x_lr", action='store_true', help='whether to first sample a noisy x_lr, then use it for guidance. ')
     parser.add_argument("--sample_noisy_x_lr_t_thred", default=1e8, type=int, help='only for t lower than sample_noisy_x_lr_t_thred, we add noise to lr')

@@ -375,7 +375,7 @@ class GaussianDiffusion:
             optimizer.step()
         return new_mean
 
-    def condition_score(self, cond_fn, p_mean_var, x, t, model_kwargs=None):
+    def condition_score(self, cond_fn, p_mean_var, x, pred_xstart, t, model_kwargs=None):
         """
         Compute what the p_mean_variance output would have been, should the
         model's score function be conditioned by cond_fn.
@@ -389,7 +389,7 @@ class GaussianDiffusion:
 
         eps = self._predict_eps_from_xstart(x, t, p_mean_var["pred_xstart"])
         eps = eps - (1 - alpha_bar).sqrt() * cond_fn(
-            x, self._scale_timesteps(t), **model_kwargs
+            pred_xstart, self._scale_timesteps(t), **model_kwargs
         )
 
         out = p_mean_var.copy()
@@ -439,7 +439,10 @@ class GaussianDiffusion:
             (t != 0).float().view(-1, *([1] * (len(x.shape) - 1)))
         )  # no noise when t == 0
         if cond_fn is not None:
-            out["mean"] = self.condition_mean(
+            # out["mean"] = self.condition_mean(
+            #     cond_fn, out, x, out["pred_xstart"], t, model_kwargs=model_kwargs
+            # )
+            out = self.condition_score(
                 cond_fn, out, x, out["pred_xstart"], t, model_kwargs=model_kwargs
             )
         sample = out["mean"] + nonzero_mask * th.exp(0.5 * out["log_variance"]) * noise
