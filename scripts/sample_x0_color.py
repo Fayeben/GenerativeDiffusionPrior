@@ -16,9 +16,7 @@ from guided_diffusion import logger
 from guided_diffusion.script_util_x0 import (
     NUM_CLASSES,
     model_and_diffusion_defaults,
-    classifier_defaults,
     create_model_and_diffusion,
-    create_classifier,
     add_dict_to_argparser,
     args_to_dict,
 )
@@ -37,7 +35,7 @@ import torch
 import torch.nn as nn
 
 import MyLoss
-
+os.environ['CUDA_VISIBLE_DEVICES']='6'
 def get_dataset(path, global_rank, world_size):
     if os.path.isfile(path): # base_samples could be store in a .npz file
         dataset = NpzDataset(path, rank=global_rank, world_size=world_size)
@@ -79,15 +77,6 @@ def main():
         model.convert_to_fp16()
     model.eval()
 
-    logger.log("loading classifier...")
-    classifier = create_classifier(**args_to_dict(args, classifier_defaults().keys()))
-    classifier.load_state_dict(
-        th.load(args.classifier_path, map_location="cpu")
-    )
-    classifier.to(device)
-    if args.classifier_use_fp16:
-        classifier.convert_to_fp16()
-    classifier.eval()
 
     L_color = MyLoss.L_color()
 
@@ -96,10 +85,6 @@ def main():
         assert y is not None
         with th.enable_grad():
             x_in = x.detach().requires_grad_(True)
-            logits = classifier(x_in, t)
-            log_probs = F.log_softmax(logits, dim=-1)
-            selected = log_probs[range(len(logits)), y.view(-1)]
-            loss = selected.sum() * args.classifier_scale
             if not x_lr is None:
                 # x_lr and x_in are of shape BChw, BCHW, they are float type that range from -1 to 1, x_in for small t'
                 os.makedirs(os.path.join(logger.get_dir(), 'inter'), exist_ok=True)
@@ -124,7 +109,7 @@ def main():
 
                 loss_col = torch.mean(L_color(x_in))
 
-                loss = loss - mse * args.img_guidance_scale - loss_col*10 # move xt toward the gradient direction
+                loss = - mse * args.img_guidance_scale - loss_col*500 # move xt toward the gradient direction
                 print('step t %d img guidance has been used, mse is %.8f * %d = %.2f' % (t[0], mse, args.img_guidance_scale, mse*args.img_guidance_scale))
             return th.autograd.grad(loss, x_in)[0]
 
@@ -243,14 +228,11 @@ def create_argparser():
     defaults = dict(
         clip_denoised=True,
         num_samples=100,
-        batch_size=50,
+        batch_size=10,
         use_ddim=False,
-        model_path="/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/models/256x256_diffusion.pt",
-        classifier_path="/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/models/256x256_classifier.pt",
-        classifier_scale=1.0,
+        model_path="/nvme/feiben/DDPM_Beat_GAN/scripts/models/256x256_diffusion_uncond.pt",
     )
     defaults.update(model_and_diffusion_defaults())
-    defaults.update(classifier_defaults())
     parser = argparse.ArgumentParser()
     add_dict_to_argparser(parser, defaults)
 
@@ -258,17 +240,17 @@ def create_argparser():
     parser.add_argument("--device", default=0, type=int, help='the cuda device to use to generate images')
     parser.add_argument("--global_rank", default=0, type=int, help='global rank of this process')
     parser.add_argument("--world_size", default=1, type=int, help='the total number of ranks')
-    parser.add_argument("--save_dir", default='/mnt/petrelfs/feiben/GDP/generate_images/generated_image_x0_color', type=str, help='the directory to save the generate images')
+    parser.add_argument("--save_dir", default='/nvme/feiben/GDP/generate_images/generated_image_x0_color', type=str, help='the directory to save the generate images')
     parser.add_argument("--save_png_files", action='store_true', help='whether to save the generate images into individual png files')
     parser.add_argument("--save_numpy_array", action='store_true', help='whether to save the generate images into a single numpy array')
     
     # these two arguments are only valid when not start from scratch
     parser.add_argument("--denoise_steps", default=25, type=int, help='number of denoise steps')
-    parser.add_argument("--dataset_path", default='/mnt/lustre/feiben/DDPM_Beat_GAN/evaluations/precomputed/biggan_deep_imagenet64.npz', type=str, help='path to the generated images. Could be an npz file or an image folder')
+    parser.add_argument("--dataset_path", default='/nvme/lustre/feiben/DDPM_Beat_GAN/evaluations/precomputed/biggan_deep_imagenet64.npz', type=str, help='path to the generated images. Could be an npz file or an image folder')
     
     parser.add_argument("--use_img_for_guidance", action='store_true', help='whether to use a (low resolution) image for guidance. If true, we generate an image that is similar to the low resolution image')
-    parser.add_argument("--img_guidance_scale", default=10000000, type=float, help='guidance scale')
-    parser.add_argument("--base_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/gray_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
+    parser.add_argument("--img_guidance_scale", default=6000, type=float, help='guidance scale')
+    parser.add_argument("--base_samples", default='/nvme/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/gray_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
     parser.add_argument("--sample_noisy_x_lr", action='store_true', help='whether to first sample a noisy x_lr, then use it for guidance. ')
     parser.add_argument("--sample_noisy_x_lr_t_thred", default=1e8, type=int, help='only for t lower than sample_noisy_x_lr_t_thred, we add noise to lr')
     

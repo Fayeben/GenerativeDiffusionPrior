@@ -2,14 +2,3 @@ Logging to /nvme/feiben/GDP/generate_images/generated_image_x0_GDP_sr4
 creating model and diffusion...
 loading dataset...
 sampling...
-created 100 samples
-created 200 samples
-created 300 samples
-created 400 samples
-created 500 samples
-created 600 samples
-created 700 samples
-created 800 samples
-created 900 samples
-created 1000 samples
-sampling complete

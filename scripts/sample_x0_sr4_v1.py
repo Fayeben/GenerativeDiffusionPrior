@@ -43,7 +43,7 @@ def get_dataset(path, global_rank, world_size):
     return dataset
 
 # degradation model
-deg = 'sr4'
+deg = 'inp25'
 image_size = 256
 channels = 3
 device = 'cuda:0'
@@ -256,7 +256,7 @@ def create_argparser():
 
 
     save_dir  = os.path.join('/nvme/feiben/GDP/generate_images', ('generated_image_x0_GDP_' + deg))
-    base_samples  = os.path.join('/nvme/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader', (deg + ('_resolution_256.npz')))
+    base_samples  = os.path.join('/nvme/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader', (('inp_resolution_256.npz')))
     # add zhaoyang own's arguments
     parser.add_argument("--device", default=0, type=int, help='the cuda device to use to generate images')
     parser.add_argument("--global_rank", default=0, type=int, help='global rank of this process')
