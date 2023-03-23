@@ -58,6 +58,8 @@ python sample_x0_enhancement.py  $MODEL_FLAGS --use_img_for_guidance --start_fro
 ```
  * HDR recovery:
 
+ The code for HDR recovery will come soon!
+
 <!-- 
 Run the following command to use ES-DDPM (T'=100) to generate ImageNet-64 images (with jumping interval 4):
 ```
