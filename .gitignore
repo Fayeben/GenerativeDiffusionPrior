@@ -49,3 +49,4 @@ scripts/sample_blur_v1.py
 scripts/sample_sr4_v1.py
 scripts/sample_color_v1.py
 logs*
+sample_x0_color.py
