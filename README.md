@@ -30,7 +30,10 @@ MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_step
 python sample_x0_sr4.py  $MODEL_FLAGS --use_img_for_guidance --start_from_scratch --save_png_files
 ```
  * Deblurring:
-
+```
+MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
+python sample_x0_blur.py  $MODEL_FLAGS --use_img_for_guidance --start_from_scratch --save_png_files
+```
  * Impainting:
 ```
 MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
@@ -54,11 +57,14 @@ python sample_x0_linear.py  $MODEL_FLAGS --deg sr4 --use_img_for_guidance --star
  * Low light enhancement:
 ```
 MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
-python sample_x0_enhancement.py  $MODEL_FLAGS --use_img_for_guidance --start_from_scratch --save_png_files
+python sample_x0_enhancement_low_light.py  $MODEL_FLAGS --use_img_for_guidance --start_from_scratch --save_png_files
 ```
  * HDR recovery:
-
- The code for HDR recovery will come soon!
+```
+MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
+python sample_x0_enhancement_HDR.py  $MODEL_FLAGS --use_img_for_guidance --start_from_scratch --save_png_files
+```
+ <!-- The code for HDR recovery will come soon! -->
 
 <!-- 
 Run the following command to use ES-DDPM (T'=100) to generate ImageNet-64 images (with jumping interval 4):
