@@ -4,6 +4,7 @@ import torch as th
 from .gaussian_diffusion_x0_enhancement import GaussianDiffusion
 from .gaussian_diffusion_x0_enhancement_dual import GaussianDiffusion_final
 from .gaussian_diffusion_x0_enhancement_direct import GaussianDiffusion_direct
+from .gaussian_diffusion_x0_enhancement_HDR import GaussianDiffusion_HDR
 
 def space_timesteps(num_timesteps, section_counts):
     """
@@ -340,3 +341,78 @@ class _WrappedModel1:
         if self.rescale_timesteps:
             new_ts = new_ts.float() * (1000.0 / self.original_num_steps)
         return self.model(x, new_ts, light_factor, light_mask, corner, **kwargs)
+
+
+class SpacedDiffusion_HDR(GaussianDiffusion_HDR):
+    """
+    A diffusion process which can skip steps in a base diffusion process.
+
+    :param use_timesteps: a collection (sequence or set) of timesteps from the
+                          original diffusion process to retain.
+    :param kwargs: the kwargs to create the base diffusion process.
+    """
+
+    def __init__(self, use_timesteps, **kwargs):
+        # use_timesteps is a set of integers that range from 0 to steps-1
+        # it contains timestep_respacing integers that uniformly covers the interval
+        self.use_timesteps = set(use_timesteps) # it is a set, and numbers in it may not be ordered
+        self.timestep_map = []
+        self.original_num_steps = len(kwargs["betas"])
+
+        base_diffusion = GaussianDiffusion_direct(**kwargs)  # pylint: disable=missing-kwoa
+        # self.base_diffusion = base_diffusion
+        # base_diffusion.betas is of length original_num_steps
+        last_alpha_cumprod = 1.0
+        new_betas = []
+        for i, alpha_cumprod in enumerate(base_diffusion.alphas_cumprod):
+            if i in self.use_timesteps:
+                new_betas.append(1 - alpha_cumprod / last_alpha_cumprod)
+                last_alpha_cumprod = alpha_cumprod
+                self.timestep_map.append(i)
+        # timestep_map is a list like [0, 4, 8, ..., 999] it can map respaced diffusion step to original diffusion step
+
+        # added by zhaoyang, use for add noise to lr image
+        self.timestep_reverse_map = {} 
+        for idx, step in enumerate(self.timestep_map):
+            self.timestep_reverse_map[step] = idx
+
+
+        kwargs["betas"] = np.array(new_betas) # now new_betas is a sorted version
+        super().__init__(**kwargs)
+        # self.betas is of length len(use_timesteps)
+
+    def p_mean_variance(
+        self, model, *args, **kwargs
+    ):  # pylint: disable=signature-differs
+        return super().p_mean_variance(self._wrap_model(model), *args, **kwargs)
+
+    def training_losses(
+        self, model, *args, **kwargs
+    ):  # pylint: disable=signature-differs
+        return super().training_losses(self._wrap_model(model), *args, **kwargs)
+
+    def condition_mean(self, cond_fn, *args, **kwargs):
+        return super().condition_mean(self._wrap_model1(cond_fn), *args, **kwargs)
+
+    def condition_score(self, cond_fn, *args, **kwargs):
+        return super().condition_score(self._wrap_model(cond_fn), *args, **kwargs)
+
+    def _wrap_model(self, model):
+        if isinstance(model, _WrappedModel):
+            return model
+        return _WrappedModel(
+            model, self.timestep_map, self.rescale_timesteps, self.original_num_steps
+        )
+
+    def _wrap_model1(self, model):
+        if isinstance(model, _WrappedModel):
+            return model
+        return _WrappedModel1(
+            model, self.timestep_map, self.rescale_timesteps, self.original_num_steps
+        )
+
+
+    def _scale_timesteps(self, t):
+        # Scaling is done by the wrapped model.
+        return t
+

@@ -37,6 +37,8 @@ import torch.nn as nn
 
 import MyLoss
 
+os.environ['CUDA_VISIBLE_DEVICES']='7'
+
 def get_dataset(path, global_rank, world_size):
     if os.path.isfile(path): # base_samples could be store in a .npz file
         dataset = NpzDataset(path, rank=global_rank, world_size=world_size)
@@ -236,7 +238,7 @@ def create_argparser():
         num_samples=100,
         batch_size=1,
         use_ddim=False,
-        model_path="/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/models/256x256_diffusion_uncond.pt",
+        model_path="/nvme/feiben/DDPM_Beat_GAN/scripts/models/256x256_diffusion_uncond.pt",
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()
@@ -246,17 +248,17 @@ def create_argparser():
     parser.add_argument("--device", default=0, type=int, help='the cuda device to use to generate images')
     parser.add_argument("--global_rank", default=0, type=int, help='global rank of this process')
     parser.add_argument("--world_size", default=1, type=int, help='the total number of ranks')
-    parser.add_argument("--save_dir", default='/mnt/petrelfs/feiben/GDP/generate_images/generated_image_x0_enhancement_brightness_lol_disco_mask', type=str, help='the directory to save the generate images')
+    parser.add_argument("--save_dir", default='/nvme/feiben/GDP/generate_images/generated_image_x0_enhancement_brightness_lol', type=str, help='the directory to save the generate images')
     parser.add_argument("--save_png_files", action='store_true', help='whether to save the generate images into individual png files')
     parser.add_argument("--save_numpy_array", action='store_true', help='whether to save the generate images into a single numpy array')
     
     # these two arguments are only valid when not start from scratch
     parser.add_argument("--denoise_steps", default=25, type=int, help='number of denoise steps')
-    parser.add_argument("--dataset_path", default='/mnt/lustre/feiben/DDPM_Beat_GAN/evaluations/precomputed/biggan_deep_imagenet64.npz', type=str, help='path to the generated images. Could be an npz file or an image folder')
+    parser.add_argument("--dataset_path", default='/nvme/feiben/DDPM_Beat_GAN/evaluations/precomputed/biggan_deep_imagenet64.npz', type=str, help='path to the generated images. Could be an npz file or an image folder')
     
     parser.add_argument("--use_img_for_guidance", action='store_true', help='whether to use a (low resolution) image for guidance. If true, we generate an image that is similar to the low resolution image')
     parser.add_argument("--img_guidance_scale", default=80000, type=float, help='guidance scale')
-    parser.add_argument("--base_samples", default='/mnt/lustre/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_low_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
+    parser.add_argument("--base_samples", default='/nvme/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/LOL_low_resolution_256.npz', type=str, help='the directory or npz file to the guidance imgs. This folder should have the same structure as dataset_path, there should be a one to one mapping between images in them')
 
     parser.add_argument("--sample_noisy_x_lr", action='store_true', help='whether to first sample a noisy x_lr, then use it for guidance. ')
     parser.add_argument("--sample_noisy_x_lr_t_thred", default=1e8, type=int, help='only for t lower than sample_noisy_x_lr_t_thred, we add noise to lr')
