@@ -212,7 +212,6 @@ def main():
         light_mask = ((light_mask + 1) * 127.5).clamp(0, 255).to(th.uint8)
         light_mask = light_mask.unsqueeze(0).unsqueeze(0).repeat(1,3,1,1).permute(0, 2, 3, 1)
         light_mask = light_mask.contiguous()
-        print(sample.shape, light_mask.shape)
 
         light_mask = light_mask.detach().cpu().numpy()
         sample = sample.detach().cpu().numpy()

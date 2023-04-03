@@ -30,7 +30,7 @@ def save_image_tensor(x, label, save_dir):
 
 if __name__ == '__main__':
     import pdb
-    path='/nvme/feiben/DDPM_Beat_GAN/scripts/imagenet_dataloader/NTIRE-100/NTIRE-100-long'
+    path='/NTIRE-100/NTIRE-100-long'
     image_size1 = 64
     image_size2 = 256
     dataset = ImageFolderDataset(path, permute=True, normalize=False, transform=None)

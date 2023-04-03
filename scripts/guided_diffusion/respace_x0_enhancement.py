@@ -359,7 +359,7 @@ class SpacedDiffusion_HDR(GaussianDiffusion_HDR):
         self.timestep_map = []
         self.original_num_steps = len(kwargs["betas"])
 
-        base_diffusion = GaussianDiffusion_direct(**kwargs)  # pylint: disable=missing-kwoa
+        base_diffusion = GaussianDiffusion_HDR(**kwargs)  # pylint: disable=missing-kwoa
         # self.base_diffusion = base_diffusion
         # base_diffusion.betas is of length original_num_steps
         last_alpha_cumprod = 1.0

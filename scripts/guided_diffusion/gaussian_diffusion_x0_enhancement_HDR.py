@@ -465,28 +465,39 @@ class GaussianDiffusion_HDR:
                 denoised_fn=denoised_fn,
                 model_kwargs=model_kwargs,
             )
-            print(hi, wi)
             if cond_fn_short is not None:
                 for i in range(1):
                     out["mean"], light_factor_tmp, light_mask_tmp = self.condition_mean(
                         cond_fn_short, out, x[:, :, hi:hi + p_size, wi:wi + p_size], out["pred_xstart"], t, light_factor = light_factor, light_mask = light_mask[hi:hi + p_size, wi:wi + p_size], corner=[hi, wi, p_size], model_kwargs=model_kwargs
                     )
+                light_mask_return[hi:hi + p_size, wi:wi + p_size] += light_mask_tmp
+                light_factor_return += light_factor_tmp
+                light_mask_grid_mask[hi:hi + p_size, wi:wi + p_size] += 1
+                light_factor_count += 1
+            if cond_fn_medium is not None:
+                for i in range(1):
                     out["mean"], light_factor_tmp, light_mask_tmp = self.condition_mean(
-                        cond_fn_medium, out, x[:, :, hi:hi + p_size, wi:wi + p_size], out["pred_xstart"], t, light_factor = light_factor_tmp, light_mask = light_mask_tmp[hi:hi + p_size, wi:wi + p_size], corner=[hi, wi, p_size], model_kwargs=model_kwargs
+                        cond_fn_medium, out, x[:, :, hi:hi + p_size, wi:wi + p_size], out["pred_xstart"], t, light_factor = light_factor, light_mask = light_mask[hi:hi + p_size, wi:wi + p_size], corner=[hi, wi, p_size], model_kwargs=model_kwargs
                     )
+                light_mask_return[hi:hi + p_size, wi:wi + p_size] += light_mask_tmp
+                light_factor_return += light_factor_tmp
+                light_mask_grid_mask[hi:hi + p_size, wi:wi + p_size] += 1
+                light_factor_count += 1
+            if cond_fn_long is not None:
+                for i in range(1):
                     out["mean"], light_factor_tmp, light_mask_tmp = self.condition_mean(
-                        cond_fn_long, out, x[:, :, hi:hi + p_size, wi:wi + p_size], out["pred_xstart"], t, light_factor = light_factor_tmp, light_mask = light_mask_tmp[hi:hi + p_size, wi:wi + p_size], corner=[hi, wi, p_size], model_kwargs=model_kwargs
+                        cond_fn_long, out, x[:, :, hi:hi + p_size, wi:wi + p_size], out["pred_xstart"], t, light_factor = light_factor, light_mask = light_mask[hi:hi + p_size, wi:wi + p_size], corner=[hi, wi, p_size], model_kwargs=model_kwargs
                     )
+                light_mask_return[hi:hi + p_size, wi:wi + p_size] += light_mask_tmp
+                light_factor_return += light_factor_tmp
+                light_mask_grid_mask[hi:hi + p_size, wi:wi + p_size] += 1
+                light_factor_count += 1
 
-            light_mask_return[hi:hi + p_size, wi:wi + p_size] += light_mask_tmp
-            light_factor_return += light_factor_tmp
-            light_mask_grid_mask[hi:hi + p_size, wi:wi + p_size] += 1
-            x_grid_mask[:, :, hi:hi + p_size, wi:wi + p_size] += 1
             new_out_mean[:, :, hi:hi + p_size, wi:wi + p_size] += out["mean"]          
             new_out_log_variance[:, :, hi:hi + p_size, wi:wi + p_size] += out["log_variance"]
             new_out_pred_xstart[:, :, hi:hi + p_size, wi:wi + p_size] += out["pred_xstart"]
-            light_factor_count += 1
-
+            x_grid_mask[:, :, hi:hi + p_size, wi:wi + p_size] += 1      
+        
         light_factor = light_factor_return/light_factor_count
 
         new_out_mean = th.div(new_out_mean, x_grid_mask)
