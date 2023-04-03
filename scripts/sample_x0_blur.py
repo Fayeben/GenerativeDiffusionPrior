@@ -69,7 +69,7 @@ class GaussianBlur(nn.Module):
         x = torch.cat([x1, x2, x3], dim=1)
         return x
     
-    
+
 def get_gaussian_blur(kernel_size, device):
     kernel = gkern(kernel_size, 2).astype(np.float32)
     gaussian_blur = GaussianBlur(kernel)
@@ -130,7 +130,6 @@ def main():
                 loss = - mse * args.img_guidance_scale # move xt toward the gradient direction
                 print('step t %d img guidance has been used, mse is %.8f * %d = %.2f' % (t[0], mse, args.img_guidance_scale, mse*args.img_guidance_scale))
             return th.autograd.grad(loss, x_in)[0]
-
 
     def model_fn(x, t, y=None):
         assert y is not None
@@ -242,7 +241,6 @@ def main():
 
     # dist.barrier()
     logger.log("sampling complete")
-
 
 def create_argparser():
     defaults = dict(
