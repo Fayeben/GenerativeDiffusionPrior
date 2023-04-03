@@ -18,6 +18,8 @@ pip install -e .
 We use a single  single unconditional DDPM pre-trained on ImageNet to produce diverse and high-fidelity outputs for unified image restoration and enhancement. Download pretrained DDPMs on ImageNet-256(uncond) from [this page](https://github.com/openai/guided-diffusion). 
 Then download pre-generated ImageNet-64 (BigGAN-deep),  LSUN-Bedroom (StyleGAN) and LSUN-Cat (StyleGAN2) images from this page [this page](https://github.com/openai/guided-diffusion/tree/main/evaluations).
 
+We use 1,000 images from the ImageNet validation set for comparison with other methods. The list of images is taken from [https://github.com/XingangPan/deep-generative-prior/](https://github.com/XingangPan/deep-generative-prior/)
+
 ## Generative Diffusion Prior (GDP-x0) for linear problems
 
 ```
@@ -134,3 +136,18 @@ python sample_x0_inp_v1.py  $MODEL_FLAGS --deg inp25 --use_img_for_guidance --st
 MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
 python sample_x0_color_v1.py  $MODEL_FLAGS --use_img_for_guidance --start_from_scratch --save_png_files
 ```
+
+## References and Acknowledgements
+```
+@inproceedings{fei2022generative,
+    title={Generative Diffusion Prior for Unified Image Restoration and Enhancement},
+    author={Ben Fei, Zhaoyang Lyu, Liang Pan, Junzhe Zhang, Weidong Yang, Tianyue Luo, Bo Zhang, Bo Dai},
+    booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+    year={2023}
+}
+```
+
+This implementation is based on / inspired by:
+- [https://github.com/openai/guided-diffusion](https://github.com/openai/guided-diffusion) (the Guided Diffusion repo),
+- [https://github.com/bahjat-kawar/ddrm](https://github.com/bahjat-kawar/ddrm) (the DDRM repo), and
+- [https://github.com/ZhaoyangLyu/Early_Stopped_DDPM](https://github.com/ZhaoyangLyu/Early_Stopped_DDPM) (the Early_Stopped_DDPM repo)

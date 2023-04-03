@@ -40,6 +40,7 @@ scripts/imagenet_dataloader/imagenet/*
 generated_image*/*
 scripts/models/*
 *.tar.gz
+model-card.md
 # scripts/sample_x0_sr4_v1.py
 # scripts/sample_x0_sr4_ddim.py
 # scripts/sample_x0_blur_v1.py
