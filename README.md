@@ -18,7 +18,7 @@ pip install -e .
 We use a single  single unconditional DDPM pre-trained on ImageNet to produce diverse and high-fidelity outputs for unified image restoration and enhancement. Download pretrained DDPMs on ImageNet-256(uncond) from [this page](https://github.com/openai/guided-diffusion). 
 Then download pre-generated ImageNet-64 (BigGAN-deep),  LSUN-Bedroom (StyleGAN) and LSUN-Cat (StyleGAN2) images from this page [this page](https://github.com/openai/guided-diffusion/tree/main/evaluations).
 
-## Generative Diffusion Prior (GDP) for linear problems
+## Generative Diffusion Prior (GDP-x0) for linear problems
 
 ```
 cd scripts
@@ -45,13 +45,13 @@ MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_step
 python sample_x0_color.py  $MODEL_FLAGS --use_img_for_guidance --start_from_scratch --save_png_files
 ```
 
-
+<!-- 
  * Super-resolution with 20-step DDIM:
 ```
 MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
 SAMPLE_FLAGS="--batch_size 1 --num_samples 100  --timestep_respacing ddim20 --use_ddim True"
 python sample_x0_linear.py  $MODEL_FLAGS --deg sr4 --use_img_for_guidance --start_from_scratch --save_png_files
-```
+``` -->
 ## Generative Diffusion Prior (GDP) for non-linear, blind, multi-guidance problems
 
  * Low light enhancement:
@@ -81,3 +81,56 @@ Run the following command to use ES-DDPM (T'=100) to generate LSUN-Cat-256 image
 ```
 python generate_processes_diffusion_and_reverse --execute --reverse_steps 100 --chain_length 1000 --dataset lsun_cat --dataset_path ../evaluations/precomputed/lsun/stylegan2_lsun_cat.npz --devices '0,1,2,3,4,5,6,7,8' 
 ``` -->
+## Generative Diffusion Prior (GDP-xt) for linear problems
+
+```
+cd scripts
+```
+
+ * Super-resolution:
+```
+MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
+python sample_sr4.py  $MODEL_FLAGS --use_img_for_guidance --start_from_scratch --save_png_files
+```
+ * Deblurring:
+```
+MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
+python sample_blur.py  $MODEL_FLAGS --use_img_for_guidance --start_from_scratch --save_png_files
+```
+ * Impainting:
+```
+MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
+python sample_inp.py  $MODEL_FLAGS --deg inp25 --use_img_for_guidance --start_from_scratch --save_png_files
+```
+ * Colorization:
+```
+MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
+python sample_color.py  $MODEL_FLAGS --use_img_for_guidance --start_from_scratch --save_png_files
+```
+
+## Generative Diffusion Prior (GDP-x0-v1) for linear problems
+
+```
+cd scripts
+```
+
+ * Super-resolution:
+```
+MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
+python sample_x0_sr4_v1.py  $MODEL_FLAGS --use_img_for_guidance --start_from_scratch --save_png_files
+```
+ * Deblurring:
+```
+MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
+python sample_x0_blur_v1.py  $MODEL_FLAGS --use_img_for_guidance --start_from_scratch --save_png_files
+```
+ * Impainting:
+```
+MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
+python sample_x0_inp_v1.py  $MODEL_FLAGS --deg inp25 --use_img_for_guidance --start_from_scratch --save_png_files
+```
+ * Colorization:
+```
+MODEL_FLAGS="--attention_resolutions 32,16,8 --class_cond False --diffusion_steps 1000 --image_size 256 --learn_sigma True --noise_schedule linear --num_channels 256 --num_head_channels 64 --num_res_blocks 2 --resblock_updown True --use_fp16 True --use_scale_shift_norm True"
+python sample_x0_color_v1.py  $MODEL_FLAGS --use_img_for_guidance --start_from_scratch --save_png_files
+```

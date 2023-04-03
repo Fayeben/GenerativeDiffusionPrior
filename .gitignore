@@ -40,12 +40,12 @@ scripts/imagenet_dataloader/imagenet/*
 generated_image*/*
 scripts/models/*
 *.tar.gz
-scripts/sample_x0_sr4_v1.py
-scripts/sample_x0_sr4_ddim.py
-scripts/sample_x0_blur_v1.py
-scripts/sample_blur_v1.py
-scripts/sample_sr4_v1.py
-scripts/sample_color_v1.py
-scripts/sample_color_v1.py
+# scripts/sample_x0_sr4_v1.py
+# scripts/sample_x0_sr4_ddim.py
+# scripts/sample_x0_blur_v1.py
+# scripts/sample_blur_v1.py
+# scripts/sample_sr4_v1.py
+# scripts/sample_color_v1.py
+# scripts/sample_color_v1.py
 logs*
 # scripts/sample_x0_enhancement_HDR.py
