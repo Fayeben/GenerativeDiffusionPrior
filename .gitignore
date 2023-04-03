@@ -39,8 +39,6 @@ scripts/imagenet_dataloader/enhancement_*/*
 scripts/imagenet_dataloader/imagenet/*
 generated_image*/*
 scripts/models/*
-scripts/imagenet_dataloader/*_resolution_64/*
-scripts/imagenet_dataloader/*_resolution_256/*
 *.tar.gz
 scripts/sample_x0_sr4_v1.py
 scripts/sample_x0_sr4_ddim.py
