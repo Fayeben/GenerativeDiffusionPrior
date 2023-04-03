@@ -161,7 +161,6 @@ def main():
         if args.use_img_for_guidance:
             image, label = data[0]
             image_lr_short, label_short = data[1]
-            print(image_lr_short.shape)
             image_lr_medium, label_medium = data[2]
             image_lr_long, label_long = data[3]
             cond_fn_short = lambda x,t,light_factor,light_mask,corner,y : light_cond_fn(x, t, light_factor=light_factor, light_mask=light_mask, corner=corner, y=y, x_lr=image_lr_short, sample_noisy_x_lr=args.sample_noisy_x_lr, diffusion=diffusion, sample_noisy_x_lr_t_thred=args.sample_noisy_x_lr_t_thred)
@@ -217,9 +216,9 @@ def main():
         sample = sample.permute(0, 2, 3, 1)
         sample = sample.contiguous()
 
-        image_lr = ((image_lr + 1) * 127.5).clamp(0, 255).to(th.uint8)
-        image_lr = image_lr.permute(0, 2, 3, 1)
-        image_lr = image_lr.contiguous()
+        image_lr_short = ((image_lr + 1) * 127.5).clamp(0, 255).to(th.uint8)
+        image_lr_short = image_lr_short.permute(0, 2, 3, 1)
+        image_lr_short = image_lr_short.contiguous()
 
         light_mask = ((light_mask + 1) * 127.5).clamp(0, 255).to(th.uint8)
         light_mask = light_mask.unsqueeze(0).unsqueeze(0).repeat(1,3,1,1).permute(0, 2, 3, 1)
