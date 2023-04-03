@@ -242,7 +242,6 @@ def main():
     # dist.barrier()
     logger.log("sampling complete")
 
-
 def create_argparser():
     defaults = dict(
         clip_denoised=True,
