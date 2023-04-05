@@ -216,7 +216,7 @@ def main():
         sample = sample.permute(0, 2, 3, 1)
         sample = sample.contiguous()
 
-        image_lr_short = ((image_lr + 1) * 127.5).clamp(0, 255).to(th.uint8)
+        image_lr_short = ((image_lr_short + 1) * 127.5).clamp(0, 255).to(th.uint8)
         image_lr_short = image_lr_short.permute(0, 2, 3, 1)
         image_lr_short = image_lr_short.contiguous()
 

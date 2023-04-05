@@ -1,5 +1,5 @@
 
-[[Paper]]() [[Models]](#pretrained-models)
+[[Paper]](https://arxiv.org/abs/2304.01247) [[Project Page]](https://generativediffusionprior.github.io/)
 
 This repository contains PyTorch implementation for __Generative Diffusion Prior for Unified Image Restoration and Enhancement__.
 
