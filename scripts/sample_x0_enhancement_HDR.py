@@ -227,13 +227,13 @@ def main():
         light_mask = light_mask.detach().cpu().numpy()
         sample = sample.detach().cpu().numpy()
         classes = classes.detach().cpu().numpy()
-        image_lr = image_lr.detach().cpu().numpy()
+        image_lr_short = image_lr_short.detach().cpu().numpy()
         if args.save_png_files:
             save_images(sample, classes, start_idx + len(all_images) * args.batch_size, os.path.join(logger.get_dir(), 'images'))
 
             save_images(light_mask, classes, start_idx + len(all_images) * args.batch_size, os.path.join(logger.get_dir(), 'mask'))
 
-            save_images(image_lr, classes, start_idx + len(all_images) * args.batch_size, os.path.join(logger.get_dir(), 'lr'))
+            save_images(image_lr_short, classes, start_idx + len(all_images) * args.batch_size, os.path.join(logger.get_dir(), 'lr'))
         all_images.append(sample)
         all_labels.append(classes)
         logger.log(f"created {len(all_images) * args.batch_size} samples")
